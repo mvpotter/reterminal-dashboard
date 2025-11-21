@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>Zitat des Tages</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .quote-wrapper {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .quote {
+            max-width: 80ch;
+            font-size: 1.6rem;
+            line-height: 1.4;
+        }
+
+        .quote::before,
+        .quote::after {
+            content: "„";
+            font-size: 2rem;
+            vertical-align: top;
+        }
+        .quote::after {
+            content: "“";
+        }
+
+        .footer {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            font-size: 1.5rem;
+            color: #555;
+        }
+
+        .author {
+            font-style: italic;
+        }
+
+        .status {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="status" id="status"></div>
+
+    <div class="quote-wrapper">
+        <div class="quote" id="quote">
+            …
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="author" id="author"></div>
+    </div>
+</div>
+
+<script>
+    async function loadQuote() {
+        const statusEl = document.getElementById('status');
+        const quoteEl = document.getElementById('quote');
+        const authorEl = document.getElementById('author');
+
+        statusEl.textContent = 'Lade Zitat…';
+
+        try {
+            const resp = await fetch('https://api.zitat-service.de/v1/quote?language=de', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!resp.ok) {
+                throw new Error('HTTP ' + resp.status);
+            }
+
+            const data = await resp.json();
+
+            // поля из API
+            const quote = data.quote || 'Kein Zitat gefunden.';
+            const author = data.authorName || '';
+
+            quoteEl.textContent = quote;
+            authorEl.textContent = author ? '— ' + author : '';
+
+            statusEl.textContent = '';
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = 'Fehler beim Laden des Zitats.';
+            quoteEl.textContent = 'Fehler beim Laden des Zitats.';
+            authorEl.textContent = '';
+        }
+    }
+
+    loadQuote();
+</script>
+</body>
+</html>
