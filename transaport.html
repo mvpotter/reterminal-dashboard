@@ -59,7 +59,7 @@
         .footer {
             flex: 0 0 auto;
             padding: 6px 12px;
-            font-size: 16px;
+            font-size: 24px;
             text-align: center;
             color: #444;
         }
@@ -87,27 +87,22 @@
     </div>
 
     <div class="footer">
-        <div id="updated"></div>
+        <div id="clock"></div>
     </div>
 </div>
 
 <script>
     function updateClock() {
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        document.getElementById('clock').textContent = `${hh}:${mm}:${ss}`;
-    }
-
-    function updateLastUpdated() {
-        const now = new Date();
-        const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('updated').textContent = `Last updated at: ${time}`;
+        const fmt = new Intl.DateTimeFormat("de-DE", {
+            timeZone: "Europe/Berlin",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+        document.getElementById('clock').textContent = fmt.format(new Date());
     }
 
     window.addEventListener('load', () => {
-        updateLastUpdated();
         updateClock();
     });
 
