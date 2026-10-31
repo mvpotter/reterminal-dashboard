@@ -1,15 +1,18 @@
 <!doctype html>
-<html>
+<html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #fff;
+      background: #ffffff;
     }
 
     .tradingview-widget-container,
@@ -21,54 +24,59 @@
 </head>
 
 <body>
-<div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
 
-  <script
-    type="text/javascript"
-    src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
-    async>
-  {
-    "symbols": [
-      ["XETR:VWCE|12M"]
-    ],
+    <script
+      type="text/javascript"
+      src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+      async>
+    {
+      "symbols": [
+        ["XETR:VWCE|12M"]
+      ],
 
-    "chartOnly": false,
-    "autosize": true,
+      "chartOnly": false,
+      "autosize": true,
 
-    "chartType": "line",
-    "lineColor": "#000000",
-    "lineWidth": 3,
-    "lineType": 0,
+      "chartType": "line",
+      "lineColor": "#000000",
+      "lineWidth": 4,
+      "lineType": 0,
 
-    "topColor": "rgba(255,255,255,0)",
-    "bottomColor": "rgba(255,255,255,0)",
+      "backgroundColor": "#ffffff",
+      "isTransparent": false,
 
-    "backgroundColor": "#ffffff",
-    "isTransparent": false,
+      "topColor": "rgba(255,255,255,0)",
+      "bottomColor": "rgba(255,255,255,0)",
 
-    "widgetFontColor": "#000000",
-    "fontColor": "#000000",
+      "fontColor": "#000000",
+      "widgetFontColor": "#000000",
 
-    "gridLineColor": "rgba(0,0,0,0.15)",
+      "gridLineColor": "rgba(0,0,0,0)",
 
-    "scalePosition": "right",
-    "scaleMode": "Normal",
+      "scalePosition": "right",
+      "scaleMode": "Normal",
 
-    "changeMode": "price-and-percent",
-    "valuesTracking": "1",
+      "valuesTracking": "1",
+      "changeMode": "price-and-percent",
 
-    "hideDateRanges": true,
-    "hideMarketStatus": true,
-    "hideSymbolLogo": true,
-    "noTimeScale": false,
+      "hideDateRanges": true,
+      "hideMarketStatus": true,
+      "hideSymbolLogo": true,
 
-    "locale": "de_DE",
+      "noTimeScale": false,
 
-    "width": "100%",
-    "height": "100%"
-  }
-  </script>
-</div>
+      "locale": "de_DE",
+
+      "fontFamily": "-apple-system, BlinkMacSystemFont, Arial, sans-serif",
+      "fontSize": "12",
+      "headerFontSize": "large",
+
+      "width": "100%",
+      "height": "100%"
+    }
+    </script>
+  </div>
 </body>
 </html>
