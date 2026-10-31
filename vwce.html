@@ -9,7 +9,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: white;
+      background: #fff;
     }
 
     .tradingview-widget-container,
@@ -21,47 +21,54 @@
 </head>
 
 <body>
-  <div class="tradingview-widget-container">
-    <div class="tradingview-widget-container__widget"></div>
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
 
-    <script
-      type="text/javascript"
-      src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
-      async>
-    {
-      "symbols": [
-        ["XETR:VWCE|12M"]
-      ],
-      "chartOnly": true,
-      "autosize": true,
+  <script
+    type="text/javascript"
+    src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
+    async>
+  {
+    "symbols": [
+      ["XETR:VWCE|12M"]
+    ],
 
-      "colorTheme": "light",
-      "backgroundColor": "#ffffff",
-      "isTransparent": false,
+    "chartOnly": false,
+    "autosize": true,
 
-      "lineColor": "#000000",
-      "lineWidth": 3,
-      "lineType": 0,
-      "chartType": "line",
+    "chartType": "line",
+    "lineColor": "#000000",
+    "lineWidth": 3,
+    "lineType": 0,
 
-      "gridLineColor": "rgba(0,0,0,0.15)",
-      "fontColor": "#000000",
-      "widgetFontColor": "#000000",
+    "topColor": "rgba(255,255,255,0)",
+    "bottomColor": "rgba(255,255,255,0)",
 
-      "scalePosition": "right",
-      "scaleMode": "Normal",
+    "backgroundColor": "#ffffff",
+    "isTransparent": false,
 
-      "hideDateRanges": true,
-      "hideMarketStatus": true,
-      "hideSymbolLogo": true,
+    "widgetFontColor": "#000000",
+    "fontColor": "#000000",
 
-      "noTimeScale": false,
-      "locale": "de_DE",
+    "gridLineColor": "rgba(0,0,0,0.15)",
 
-      "width": "100%",
-      "height": "100%"
-    }
-    </script>
-  </div>
+    "scalePosition": "right",
+    "scaleMode": "Normal",
+
+    "changeMode": "price-and-percent",
+    "valuesTracking": "1",
+
+    "hideDateRanges": true,
+    "hideMarketStatus": true,
+    "hideSymbolLogo": true,
+    "noTimeScale": false,
+
+    "locale": "de_DE",
+
+    "width": "100%",
+    "height": "100%"
+  }
+  </script>
+</div>
 </body>
 </html>
