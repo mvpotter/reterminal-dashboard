@@ -20,8 +20,8 @@
   .widget {
     width: 100%;
     height: 100vh;
-    min-height: 300px;
-    padding: 18px 20px 14px;
+    min-height: 250px;
+    padding: 12px 16px 10px;
     display: flex;
     flex-direction: column;
   }
@@ -33,19 +33,19 @@
   }
 
   .symbol {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
   }
 
   .exchange {
-    font-size: 12px;
-    color: #555;
+    font-size: 13px;
+    color: #444;
   }
 
   .price {
     font-size: 42px;
     font-weight: 700;
-    margin-top: 12px;
+    margin-top: 8px;
     letter-spacing: -1px;
   }
 
@@ -56,7 +56,8 @@
   }
 
   .change {
-    font-size: 15px;
+    font-size: 17px;
+    font-weight: 700;
     margin-top: 3px;
   }
 
@@ -64,7 +65,7 @@
     flex: 1;
     min-height: 0;
     width: 100%;
-    margin-top: 14px;
+    margin-top: 8px;
   }
 
   svg {
@@ -88,7 +89,7 @@
 
   .price-line {
     stroke: #111;
-    stroke-width: 2;
+    stroke-width: 2.2;
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -155,17 +156,16 @@ function drawChart(data) {
 
   const svg = document.getElementById("chart");
 
-  // Actual dimensions prevent text distortion.
-  const W = Math.max(svg.clientWidth, 300);
+  const W = Math.max(svg.clientWidth, 200);
   const H = Math.max(svg.clientHeight, 150);
 
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
   const left = 8;
-  const right = 75;
-  const top = 12;
-  const bottom = 36;
+  const right = 65;
+  const top = 16;
+  const bottom = 34;
 
   const plotW = W - left - right;
   const plotH = H - top - bottom;
@@ -191,12 +191,11 @@ function drawChart(data) {
 
   let html = "";
 
-  // Horizontal price grid
-  for (
-    let i = 0, v = yMin;
-    v <= yMax + step / 100 && i < 20;
-    i++, v = yMin + (i + 1) * step
-  ) {
+  // All Y-axis ticks, including 140
+  const tickCount = Math.round((yMax - yMin) / step);
+
+  for (let i = 0; i <= tickCount; i++) {
+    const v = yMin + i * step;
     const py = y(v);
 
     html += `
@@ -205,7 +204,7 @@ function drawChart(data) {
         x2="${W - right}" y2="${py}"/>
 
       <text class="axis-label"
-        x="${W - right + 10}"
+        x="${W - right + 9}"
         y="${py + 6}">
         ${v.toLocaleString("de-DE", {
           maximumFractionDigits: 2
@@ -214,7 +213,7 @@ function drawChart(data) {
     `;
   }
 
-  // Month labels
+  // Calendar month labels
   const first = new Date(tMin * 1000);
   const last = new Date(tMax * 1000);
 
@@ -255,7 +254,7 @@ function drawChart(data) {
     monthIndex++;
   }
 
-  // Price history
+  // Historical price line
   const path = data.map((p, i) =>
     `${i ? "L" : "M"}${x(p.t).toFixed(2)},${y(p.value).toFixed(2)}`
   ).join(" ");
@@ -312,22 +311,18 @@ async function update() {
       ? meta.regularMarketPrice
       : valid[valid.length - 1].value;
 
-    const previous = meta.regularMarketPreviousClose;
-
     document.getElementById("price").textContent =
       euro(price);
 
-    if (Number.isFinite(previous) && previous > 0) {
-      const diff = price - previous;
-      const pct = diff / previous * 100;
-      const sign = diff >= 0 ? "+" : "";
+    // One-year change relative to the first available close.
+    const yearStart = valid[0].value;
+    const diff = price - yearStart;
+    const pct = diff / yearStart * 100;
+    const sign = diff >= 0 ? "+" : "";
 
-      change.textContent =
-        `${sign}${euro(diff)} EUR ` +
-        `(${sign}${pct.toFixed(2)}%) today`;
-    } else {
-      change.textContent = "Daily change unavailable";
-    }
+    change.textContent =
+      `${sign}${euro(diff)} EUR ` +
+      `(${sign}${pct.toFixed(2)}%) · 1Y`;
 
     chartData = valid;
     drawChart(chartData);
@@ -339,7 +334,6 @@ async function update() {
 }
 
 update();
-
 setInterval(update, 5 * 60 * 1000);
 
 if (typeof ResizeObserver !== "undefined") {
