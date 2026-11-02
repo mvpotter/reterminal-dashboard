@@ -1,125 +1,169 @@
+
 <!doctype html>
 <html lang="de">
 <head>
-    <meta charset="utf-8" />
-    <title>Zitat des Tages</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #f5f5f5;
-            color: #111;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zitat des Tages</title>
 
-        .page {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            box-sizing: border-box;
-        }
+<style>
+  * {
+    box-sizing: border-box;
+  }
 
-        .quote-wrapper {
-            flex: 1 1 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+  }
 
-        .quote {
-            max-width: 80ch;
-            font-size: 1.6rem;
-            line-height: 1.4;
-        }
+  .page {
+    width: 100%;
+    height: 100vh;
+    padding: 16px 22px;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    overflow: hidden;
+  }
 
-        .quote::before,
-        .quote::after {
-            content: "„";
-            font-size: 2rem;
-            vertical-align: top;
-        }
-        .quote::after {
-            content: "“";
-        }
+  .quote-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
 
-        .footer {
-            flex: 0 0 auto;
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-            font-size: 1.5rem;
-            color: #555;
-        }
+  .quote {
+    width: 100%;
+    max-width: 760px;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
 
-        .author {
-            font-style: italic;
-        }
+  .quote::before {
+    content: "„";
+  }
 
-        .status {
-            position: absolute;
-            top: 8px;
-            left: 12px;
-            font-size: 0.75rem;
-            color: #888;
-        }
-    </style>
+  .quote::after {
+    content: "“";
+  }
+
+  .footer {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 12px;
+  }
+
+  .author {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .status {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>
 </head>
+
 <body>
 <div class="page">
-    <div class="status" id="status"></div>
 
-    <div class="quote-wrapper">
-        <div class="quote" id="quote">
-            …
-        </div>
-    </div>
+  <div class="status" id="status"></div>
 
-    <div class="footer">
-        <div class="author" id="author"></div>
-    </div>
+  <div class="quote-wrapper" id="quoteWrapper">
+    <div class="quote" id="quote">…</div>
+  </div>
+
+  <div class="footer">
+    <div class="author" id="author"></div>
+  </div>
+
 </div>
 
 <script>
-    async function loadQuote() {
-        const statusEl = document.getElementById('status');
-        const quoteEl = document.getElementById('quote');
-        const authorEl = document.getElementById('author');
+async function loadQuote() {
+  const statusEl = document.getElementById("status");
+  const quoteEl = document.getElementById("quote");
+  const authorEl = document.getElementById("author");
 
-        statusEl.textContent = 'Lade Zitat…';
+  statusEl.textContent = "Lade Zitat…";
 
-        try {
-            const resp = await fetch('https://api.zitat-service.de/v1/quote?language=de', {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
+  try {
+    const response = await fetch(
+      "https://api.zitat-service.de/v1/quote?language=de",
+      {
+        headers: {
+          "Accept": "application/json"
+        },
+        cache: "no-store"
+      }
+    );
 
-            if (!resp.ok) {
-                throw new Error('HTTP ' + resp.status);
-            }
-
-            const data = await resp.json();
-
-            // поля из API
-            const quote = data.quote || 'Kein Zitat gefunden.';
-            const author = data.authorName || '';
-
-            quoteEl.textContent = quote;
-            authorEl.textContent = author ? '— ' + author : '';
-
-            statusEl.textContent = '';
-        } catch (err) {
-            console.error(err);
-            statusEl.textContent = 'Fehler beim Laden des Zitats.';
-            quoteEl.textContent = 'Fehler beim Laden des Zitats.';
-            authorEl.textContent = '';
-        }
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
     }
 
-    loadQuote();
+    const data = await response.json();
+
+    const quote = data.quote || "Kein Zitat gefunden.";
+    const author = data.authorName || "";
+
+    quoteEl.textContent = quote;
+    authorEl.textContent = author ? "— " + author : "";
+
+    statusEl.textContent = "";
+
+    fitQuote();
+
+  } catch (error) {
+    console.error(error);
+
+    statusEl.textContent = "";
+    quoteEl.textContent = "Zitat konnte nicht geladen werden.";
+    authorEl.textContent = "";
+
+    fitQuote();
+  }
+}
+
+function fitQuote() {
+  const quote = document.getElementById("quote");
+  const wrapper = document.getElementById("quoteWrapper");
+
+  let fontSize = 30;
+  const minFontSize = 18;
+
+  quote.style.fontSize = fontSize + "px";
+
+  while (
+    quote.scrollHeight > wrapper.clientHeight &&
+    fontSize > minFontSize
+  ) {
+    fontSize -= 1;
+    quote.style.fontSize = fontSize + "px";
+  }
+}
+
+loadQuote();
+
+window.addEventListener("resize", fitQuote);
 </script>
 </body>
 </html>
