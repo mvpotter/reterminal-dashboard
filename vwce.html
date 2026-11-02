@@ -1,82 +1,351 @@
+
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VWCE</title>
+<style>
+  * { box-sizing: border-box; }
 
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #ffffff;
-    }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #111;
+    font-family: Arial, Helvetica, sans-serif;
+  }
 
-    .tradingview-widget-container,
-    .tradingview-widget-container__widget {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+  .widget {
+    width: 100%;
+    padding: 18px 20px 14px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .symbol {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .exchange {
+    font-size: 12px;
+    color: #555;
+  }
+
+  .price {
+    font-size: 42px;
+    font-weight: 700;
+    margin-top: 12px;
+    letter-spacing: -1px;
+  }
+
+  .currency {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .change {
+    font-size: 15px;
+    margin-top: 3px;
+  }
+
+  .chart {
+    width: 100%;
+    height: 245px;
+    margin-top: 14px;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .grid-line {
+    stroke: #bbb;
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+
+  .axis-label {
+    fill: #111;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .price-line {
+    stroke: #111;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .last-dot {
+    fill: #111;
+  }
+</style>
 </head>
-
 <body>
-  <div class="tradingview-widget-container">
-    <div class="tradingview-widget-container__widget"></div>
 
-    <script
-      type="text/javascript"
-      src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js"
-      async>
-    {
-      "symbols": [
-        ["XETR:VWCE|12M"]
-      ],
-
-      "chartOnly": false,
-      "autosize": true,
-
-      "chartType": "line",
-      "lineColor": "#000000",
-      "lineWidth": 4,
-      "lineType": 0,
-
-      "backgroundColor": "#ffffff",
-      "isTransparent": false,
-
-      "topColor": "rgba(255,255,255,0)",
-      "bottomColor": "rgba(255,255,255,0)",
-
-      "fontColor": "#000000",
-      "widgetFontColor": "#000000",
-
-      "gridLineColor": "rgba(0,0,0,0)",
-
-      "scalePosition": "right",
-      "scaleMode": "Normal",
-
-      "valuesTracking": "1",
-      "changeMode": "price-and-percent",
-
-      "hideDateRanges": true,
-      "hideMarketStatus": true,
-      "hideSymbolLogo": true,
-
-      "noTimeScale": false,
-
-      "locale": "de_DE",
-
-      "fontFamily": "-apple-system, BlinkMacSystemFont, Arial, sans-serif",
-      "fontSize": "12",
-      "headerFontSize": "large",
-
-      "width": "100%",
-      "height": "100%"
-    }
-    </script>
+<div class="widget">
+  <div class="header">
+    <div class="symbol">VWCE</div>
+    <div class="exchange">XETRA · EUR</div>
   </div>
+
+  <div class="price">
+    <span id="price">—</span>
+    <span class="currency">EUR</span>
+  </div>
+
+  <div class="change" id="change">Loading...</div>
+
+  <div class="chart">
+    <svg id="chart"
+         role="img"
+         aria-label="VWCE one year price chart"></svg>
+  </div>
+</div>
+
+<script>
+const SYMBOL = "VWCE.DE";
+const API = "https://proxy.cors.dev/";
+const YAHOO =
+  "https://query1.finance.yahoo.com/v8/finance/chart/";
+
+const euro = n => n.toLocaleString("de-DE", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+
+let chartData = [];
+
+function niceStep(range, targetTicks = 5) {
+  const rough = Math.max(range / targetTicks, 0.000001);
+  const magnitude = Math.pow(
+    10, Math.floor(Math.log10(rough))
+  );
+  const normalized = rough / magnitude;
+
+  const nice =
+    normalized <= 1 ? 1 :
+    normalized <= 2 ? 2 :
+    normalized <= 2.5 ? 2.5 :
+    normalized <= 5 ? 5 : 10;
+
+  return nice * magnitude;
+}
+
+function drawChart(data) {
+  if (!data || data.length < 2) return;
+
+  const svg = document.getElementById("chart");
+
+  // Actual dimensions prevent text distortion.
+  const W = Math.max(svg.clientWidth, 300);
+  const H = Math.max(svg.clientHeight, 150);
+
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+  const left = 8;
+  const right = 75;
+  const top = 12;
+  const bottom = 36;
+
+  const plotW = W - left - right;
+  const plotH = H - top - bottom;
+
+  const values = data.map(p => p.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const padding = range * 0.06;
+
+  const step = niceStep(range + 2 * padding);
+  const yMin = Math.floor((min - padding) / step) * step;
+  const yMax = Math.ceil((max + padding) / step) * step;
+
+  const tMin = data[0].t;
+  const tMax = data[data.length - 1].t;
+
+  const x = t =>
+    left + (t - tMin) / (tMax - tMin) * plotW;
+
+  const y = v =>
+    top + (yMax - v) / (yMax - yMin) * plotH;
+
+  let html = "";
+
+  // Horizontal price grid
+  for (
+    let i = 0, v = yMin;
+    v <= yMax + step / 100 && i < 20;
+    i++, v = yMin + (i + 1) * step
+  ) {
+    const py = y(v);
+
+    html += `
+      <line class="grid-line"
+        x1="${left}" y1="${py}"
+        x2="${W - right}" y2="${py}"/>
+
+      <text class="axis-label"
+        x="${W - right + 10}"
+        y="${py + 6}">
+        ${v.toLocaleString("de-DE", {
+          maximumFractionDigits: 2
+        })}
+      </text>
+    `;
+  }
+
+  // Month labels
+  const first = new Date(tMin * 1000);
+  const last = new Date(tMax * 1000);
+
+  const month = new Date(Date.UTC(
+    first.getUTCFullYear(),
+    first.getUTCMonth() + 1,
+    1
+  ));
+
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+    timeZone: "UTC"
+  });
+
+  const monthInterval = W < 500 ? 2 : 1;
+  let monthIndex = 0;
+
+  while (month <= last) {
+    const timestamp = month.getTime() / 1000;
+    const px = x(timestamp);
+
+    if (
+      monthIndex % monthInterval === 0 &&
+      px >= left + 24 &&
+      px <= W - right - 24
+    ) {
+      html += `
+        <text class="axis-label"
+          x="${px}"
+          y="${H - 8}"
+          text-anchor="middle">
+          ${formatter.format(month)}
+        </text>
+      `;
+    }
+
+    month.setUTCMonth(month.getUTCMonth() + 1);
+    monthIndex++;
+  }
+
+  // Price history
+  const path = data.map((p, i) =>
+    `${i ? "L" : "M"}${x(p.t).toFixed(2)},${y(p.value).toFixed(2)}`
+  ).join(" ");
+
+  html += `<path class="price-line" d="${path}"/>`;
+
+  const lastPoint = data[data.length - 1];
+
+  html += `
+    <circle class="last-dot"
+      cx="${x(lastPoint.t)}"
+      cy="${y(lastPoint.value)}"
+      r="3"/>
+  `;
+
+  svg.innerHTML = html;
+}
+
+async function update() {
+  const change = document.getElementById("change");
+
+  try {
+    const url =
+      YAHOO + SYMBOL + "?range=1y&interval=1d";
+
+    const response = await fetch(API + url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const json = await response.json();
+
+    const data = json.chart?.result?.[0];
+    if (!data) throw new Error("No market data");
+
+    const meta = data.meta;
+    const closes = data.indicators.quote[0].close;
+
+    const valid = data.timestamp
+      .map((t, i) => ({
+        t,
+        value: closes[i]
+      }))
+      .filter(p => Number.isFinite(p.value));
+
+    if (valid.length < 2) {
+      throw new Error("No chart data");
+    }
+
+    const price = Number.isFinite(meta.regularMarketPrice)
+      ? meta.regularMarketPrice
+      : valid[valid.length - 1].value;
+
+    const previous = meta.regularMarketPreviousClose;
+
+    document.getElementById("price").textContent =
+      euro(price);
+
+    if (Number.isFinite(previous) && previous > 0) {
+      const diff = price - previous;
+      const pct = diff / previous * 100;
+      const sign = diff >= 0 ? "+" : "";
+
+      change.textContent =
+        `${sign}${euro(diff)} EUR ` +
+        `(${sign}${pct.toFixed(2)}%) today`;
+    } else {
+      change.textContent = "Daily change unavailable";
+    }
+
+    chartData = valid;
+    drawChart(chartData);
+
+  } catch (error) {
+    change.textContent = "Data unavailable";
+    console.error("VWCE update failed:", error);
+  }
+}
+
+update();
+
+setInterval(update, 5 * 60 * 1000);
+
+if (typeof ResizeObserver !== "undefined") {
+  const observer = new ResizeObserver(() => {
+    if (chartData.length) drawChart(chartData);
+  });
+
+  observer.observe(document.querySelector(".chart"));
+} else {
+  window.addEventListener("resize", () => {
+    if (chartData.length) drawChart(chartData);
+  });
+}
+</script>
 </body>
 </html>
